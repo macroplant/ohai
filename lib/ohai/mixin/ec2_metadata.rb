@@ -49,7 +49,7 @@ module Ohai
       EC2_JSON_DIR     = %w{iam}
 
       def best_api_version
-        response = http_client.get("/")
+        response = http_client.get("/", { 'X-aws-ec2-metadata-token': v2_token })
         if response.code == "404"
           Ohai::Log.debug("ec2 metadata mixin: Received HTTP 404 from metadata server while determining API version, assuming 'latest'")
           return "latest"
@@ -75,6 +75,9 @@ module Ohai
         Net::HTTP.start(EC2_METADATA_ADDR).tap { |h| h.read_timeout = 30 }
       end
 
+      def v2_token
+        http_client.put("/latest/api/token/", nil, { 'X-aws-ec2-metadata-token-ttl-seconds': "60" })&.body
+      end
       # Get metadata for a given path and API version
       #
       # @details
@@ -84,7 +87,7 @@ module Ohai
       #   `nil` and continue the run instead of failing it.
       def metadata_get(id, api_version)
         path = "/#{api_version}/meta-data/#{id}"
-        response = http_client.get(path)
+        response = http_client.get(path, { 'X-aws-ec2-metadata-token': v2_token })
         case response.code
         when "200"
           response.body
@@ -169,7 +172,7 @@ module Ohai
       def fetch_userdata
         api_version = best_api_version
         return nil if api_version.nil?
-        response = http_client.get("/#{api_version}/user-data/")
+        response = http_client.get("/#{api_version}/user-data/", { 'X-aws-ec2-metadata-token': v2_token }))
         response.code == "200" ? response.body : nil
       end
 
@@ -177,7 +180,7 @@ module Ohai
         @fetch_dynamic_data ||= begin
           api_version = best_api_version
           return {} if api_version.nil?
-          response = http_client.get("/#{api_version}/dynamic/instance-identity/document/")
+          response = http_client.get("/#{api_version}/dynamic/instance-identity/document/", { 'X-aws-ec2-metadata-token': v2_token }))
 
           if json?(response.body) && response.code == "200"
             FFI_Yajl::Parser.parse(response.body)
