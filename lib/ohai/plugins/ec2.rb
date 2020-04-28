@@ -81,7 +81,7 @@ Ohai.plugin(:EC2) do
 
     # Even if it looks like EC2 try to connect first
     if has_ec2_xen_uuid? || has_ec2_dmi? || has_amazon_org?
-      return true if can_socket_connect?(Ohai::Mixin::Ec2Metadata::EC2_METADATA_ADDR, 80)
+      return true #if can_socket_connect?(Ohai::Mixin::Ec2Metadata::EC2_METADATA_ADDR, 80)
     end
   end
 
