@@ -172,7 +172,7 @@ module Ohai
       def fetch_userdata
         api_version = best_api_version
         return nil if api_version.nil?
-        response = http_client.get("/#{api_version}/user-data/", { 'X-aws-ec2-metadata-token': v2_token }))
+        response = http_client.get("/#{api_version}/user-data/", { 'X-aws-ec2-metadata-token': v2_token })
         response.code == "200" ? response.body : nil
       end
 
@@ -180,7 +180,7 @@ module Ohai
         @fetch_dynamic_data ||= begin
           api_version = best_api_version
           return {} if api_version.nil?
-          response = http_client.get("/#{api_version}/dynamic/instance-identity/document/", { 'X-aws-ec2-metadata-token': v2_token }))
+          response = http_client.get("/#{api_version}/dynamic/instance-identity/document/", { 'X-aws-ec2-metadata-token': v2_token })
 
           if json?(response.body) && response.code == "200"
             FFI_Yajl::Parser.parse(response.body)
